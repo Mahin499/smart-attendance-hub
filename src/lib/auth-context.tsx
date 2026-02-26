@@ -24,6 +24,9 @@ interface AuthContextType {
     metadata?: Record<string, any>
   ) => Promise<{ success: boolean; error?: string; user?: SupabaseUser | null }>;
   signInWithGoogle: () => Promise<void>;
+  signInWithGitHub: () => Promise<void>;
+  signInWithMicrosoft: () => Promise<void>;
+  signInWithDiscord: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -123,9 +126,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         redirectTo: `${window.location.origin}/dashboard`,
       },
     });
-    if (error) {
-      throw new Error(error.message);
-    }
+    if (error) throw new Error(error.message);
+  }, []);
+
+  const signInWithGitHub = useCallback(async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    if (error) throw new Error(error.message);
+  }, []);
+
+  const signInWithMicrosoft = useCallback(async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "azure",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    if (error) throw new Error(error.message);
+  }, []);
+
+  const signInWithDiscord = useCallback(async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "discord",
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+    if (error) throw new Error(error.message);
   }, []);
 
   const logout = useCallback(async () => {
@@ -134,7 +165,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, signInWithGoogle, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, signup, signInWithGoogle, signInWithGitHub, signInWithMicrosoft, signInWithDiscord, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
