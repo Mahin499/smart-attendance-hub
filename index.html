@@ -22,7 +22,24 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="app-loading" style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; color: #334155">Loading Smart Attendance Hub…</div>
+    </div>
+
+    <!-- Global error handler to display uncaught errors (helps debug white page) -->
+    <script>
+      window.addEventListener('error', function (e) {
+        try {
+          var root = document.getElementById('root');
+          if (root) {
+            root.innerHTML = '<div style="padding:24px;font-family:Inter,system-ui,Arial;color:#b91c1c"><h2>Application Error</h2><pre style="white-space:pre-wrap;">' + (e && e.message ? e.message : String(e)) + '</pre><p>Check browser console for details.</p></div>';
+          }
+        } catch (err) {
+          console.error('Error displaying global error:', err);
+        }
+      });
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
