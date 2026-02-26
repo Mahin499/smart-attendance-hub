@@ -1,10 +1,35 @@
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import StatCard from "@/components/StatCard";
-import { Users, UserPlus, GraduationCap, BarChart3, Camera } from "lucide-react";
-import { MOCK_FACULTY, MOCK_STUDENTS, getAttendanceStats } from "@/lib/mock-data";
+import { Users, GraduationCap, BarChart3, Camera } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "react-router-dom";
 
 export default function PrincipalHome() {
-  const stats = getAttendanceStats();
+  const [facultyCount, setFacultyCount] = useState(0);
+  const [studentCount, setStudentCount] = useState(0);
+  const [todayRecords, setTodayRecords] = useState<any[]>([]);
+  const [recentFaculty, setRecentFaculty] = useState<any[]>([]);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+
+    supabase.from("user_roles").select("user_id").eq("role", "faculty").then(({ data }) => {
+      setFacultyCount(data?.length || 0);
+      if (data && data.length > 0) {
+        supabase.from("profiles").select("*").in("id", data.map(d => d.user_id)).limit(5).then(({ data: profiles }) => {
+          setRecentFaculty(profiles || []);
+        });
+      }
+    });
+
+    supabase.from("students").select("id", { count: "exact", head: true }).then(({ count }) => setStudentCount(count || 0));
+    supabase.from("attendance_records").select("*").eq("date", today).then(({ data }) => setTodayRecords(data || []));
+  }, []);
+
+  const present = todayRecords.filter(r => r.status === "present").length;
+  const total = todayRecords.length || 1;
+  const percentage = Math.round((present / total) * 100);
 
   return (
     <div className="space-y-6">
@@ -13,91 +38,39 @@ export default function PrincipalHome() {
         <p className="text-muted-foreground">Overview of your institution's attendance system</p>
       </div>
 
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Faculty" value={MOCK_FACULTY.length} icon={Users} variant="default" trend={{ value: 12, positive: true }} />
-        <StatCard title="Total Students" value={MOCK_STUDENTS.length} icon={GraduationCap} variant="accent" />
-        <StatCard title="Today's Attendance" value={`${stats.percentage}%`} icon={BarChart3} variant="success" subtitle="Period 1" />
-        <StatCard title="Active Sessions" value={2} icon={Camera} variant="warning" subtitle="Live now" />
+        <StatCard title="Total Faculty" value={facultyCount} icon={Users} variant="default" />
+        <StatCard title="Total Students" value={studentCount} icon={GraduationCap} variant="accent" />
+        <StatCard title="Today's Attendance" value={`${percentage}%`} icon={BarChart3} variant="success" subtitle={`${present} present`} />
+        <StatCard title="Records Today" value={todayRecords.length} icon={Camera} variant="warning" />
       </div>
 
-      {/* Recent Faculty */}
       <Card className="shadow-card">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-heading">Recent Faculty</CardTitle>
+          <Link to="/dashboard/faculty" className="text-sm text-accent hover:underline">View all →</Link>
         </CardHeader>
         <CardContent>
-          <div className="divide-y">
-            {MOCK_FACULTY.map(f => (
-              <div key={f.id} className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-full bg-accent/20 flex items-center justify-center text-accent font-heading font-bold text-sm">
-                    {f.name.charAt(0)}
+          {recentFaculty.length === 0 ? (
+            <p className="text-center py-4 text-muted-foreground">No faculty registered yet.</p>
+          ) : (
+            <div className="divide-y">
+              {recentFaculty.map((f: any) => (
+                <div key={f.id} className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-accent/20 flex items-center justify-center text-accent font-heading font-bold text-sm">{f.name?.charAt(0) || "?"}</div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{f.name || "—"}</p>
+                      <p className="text-xs text-muted-foreground">{f.email}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{f.name}</p>
-                    <p className="text-xs text-muted-foreground">{f.department}</p>
-                  </div>
-                </div>
-                <span className="text-xs text-muted-foreground">{f.joinedDate}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Attendance Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="font-heading">Attendance Breakdown (Period 1)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[
-                { label: "Present", count: stats.present, color: "bg-success" },
-                { label: "Absent", count: stats.absent, color: "bg-destructive" },
-                { label: "Sleepy", count: stats.sleepy, color: "bg-warning" },
-              ].map(item => (
-                <div key={item.label} className="flex items-center gap-3">
-                  <div className={`h-3 w-3 rounded-full ${item.color}`} />
-                  <span className="text-sm text-foreground flex-1">{item.label}</span>
-                  <span className="text-sm font-medium text-foreground">{item.count}</span>
-                  <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${item.color}`}
-                      style={{ width: `${(item.count / stats.total) * 100}%` }}
-                    />
-                  </div>
+                  <span className="text-xs text-muted-foreground">{new Date(f.created_at).toLocaleDateString()}</span>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="font-heading">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Add Faculty", icon: UserPlus, desc: "Register new faculty" },
-              { label: "View Reports", icon: BarChart3, desc: "Attendance analytics" },
-              { label: "Manage Students", icon: GraduationCap, desc: "Student records" },
-              { label: "Period Config", icon: Camera, desc: "Time schedules" },
-            ].map(action => (
-              <button
-                key={action.label}
-                className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-center"
-              >
-                <action.icon className="h-6 w-6 text-accent" />
-                <span className="text-sm font-medium text-foreground">{action.label}</span>
-                <span className="text-xs text-muted-foreground">{action.desc}</span>
-              </button>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
