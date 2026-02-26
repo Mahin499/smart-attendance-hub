@@ -1,9 +1,10 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import RoleSetup from "./pages/RoleSetup";
@@ -14,6 +15,7 @@ import LiveAttendance from "./pages/LiveAttendance";
 import Analytics from "./pages/Analytics";
 import PeriodConfig from "./pages/PeriodConfig";
 import Reports from "./pages/Reports";
+import Setup from "./pages/Setup";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
@@ -50,7 +52,7 @@ function AppRoutes() {
   );
 }
 
-const App = () => (
+const AppContent = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -63,5 +65,14 @@ const App = () => (
     </TooltipProvider>
   </QueryClientProvider>
 );
+
+const App = () => {
+  // If Supabase is not configured, show the setup page first
+  if (!isSupabaseConfigured()) {
+    return <Setup />;
+  }
+  
+  return <AppContent />;
+};
 
 export default App;

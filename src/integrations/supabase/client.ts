@@ -2,26 +2,32 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Prefer Vite env, but allow runtime globals (useful on some hosting providers)
+// Helper to get stored config from localStorage
+function getStoredConfig() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const stored = localStorage.getItem('sah_supabase_config');
+      return stored ? JSON.parse(stored) : null;
+    }
+  } catch {
+    // ignore localStorage errors
+  }
+  return null;
+}
+
+// Prefer stored config (user setup), then Vite env, then runtime globals
 const _viteUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const _viteKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
 const _globalUrl = (globalThis as any).__SUPABASE_URL || (globalThis as any).supabaseUrl || (globalThis as any).SUPABASE_URL;
 const _globalKey = (globalThis as any).__SUPABASE_KEY || (globalThis as any).supabaseKey || (globalThis as any).SUPABASE_PUBLISHABLE_KEY;
 
-const SUPABASE_URL = _viteUrl || _globalUrl;
-const SUPABASE_PUBLISHABLE_KEY = _viteKey || _globalKey;
+const _storedConfig = getStoredConfig();
+const SUPABASE_URL = _storedConfig?.url || _viteUrl || _globalUrl;
+const SUPABASE_PUBLISHABLE_KEY = _storedConfig?.key || _viteKey || _globalKey;
 
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  const missing = [] as string[];
-  if (!SUPABASE_URL) missing.push('VITE_SUPABASE_URL or runtime __SUPABASE_URL');
-  if (!SUPABASE_PUBLISHABLE_KEY) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY or runtime __SUPABASE_KEY');
-  const msg = `Missing required Supabase configuration: ${missing.join(', ')}.\n` +
-    `Set these in your local .env (Vite) or expose them as runtime globals (e.g. window.__SUPABASE_URL) in your hosting environment.\n` +
-    `See README.md -> Environment Configuration for details.`;
-  // eslint-disable-next-line no-console
-  console.error(msg);
-  throw new Error(msg);
+export function isSupabaseConfigured(): boolean {
+  return !!(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
 }
 
 // Import the supabase client like this:
