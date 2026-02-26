@@ -1,0 +1,20 @@
+# Place student face images here
+
+## Instructions
+
+1. Create subdirectories for each student or place images directly
+2. Use format: `student_name.jpg` or `student_id.jpg`
+3. Ensure good lighting and clear face visibility in images
+4. Recommended: Use 500x500px or larger images
+
+## Example Structure
+
+```
+dataset/
+├── john_doe.jpg
+├── jane_smith.jpg
+├── student_001.jpg
+└── student_002.jpg
+```
+
+The filename (without extension) will be used as the display name in attendance records.
