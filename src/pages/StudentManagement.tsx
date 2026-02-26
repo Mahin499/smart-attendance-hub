@@ -26,6 +26,7 @@ export default function StudentManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [open, setOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [form, setForm] = useState({ name: "", reg_no: "", class: "" });
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -72,6 +73,48 @@ export default function StudentManagement() {
       fetchStudents();
     }
   };
++  
++  const handleEdit = (s: Student) => {
++    setEditingStudent(s);
++    setForm({ name: s.name, reg_no: s.reg_no, class: s.class });
++    setPhotoFile(null);
++    setOpen(true);
++  };
++
++  const handleUpdate = async (e: React.FormEvent) => {
++    e.preventDefault();
++    if (!user || !editingStudent) return;
++    setSaving(true);
++
++    let photo_url = editingStudent.photo_url;
++    if (photoFile) {
++      const path = `${user.id}/${Date.now()}-${photoFile.name}`;
++      const { error: uploadErr } = await supabase.storage.from("student-photos").upload(path, photoFile);
++      if (!uploadErr) {
++        const { data: urlData } = supabase.storage.from("student-photos").getPublicUrl(path);
++        photo_url = urlData.publicUrl;
++      }
++    }
++
++    const { error } = await supabase.from("students").update({
++      name: form.name,
++      reg_no: form.reg_no,
++      class: form.class,
++      photo_url,
++    }).eq("id", editingStudent.id);
++
++    setSaving(false);
++    if (error) {
++      toast({ title: "Error", description: error.message, variant: "destructive" });
++    } else {
++      toast({ title: "Student updated" });
++      setForm({ name: "", reg_no: "", class: "" });
++      setPhotoFile(null);
++      setOpen(false);
++      setEditingStudent(null);
++      fetchStudents();
++    }
++  };
 
   const handleDelete = async (id: string) => {
     await supabase.from("students").delete().eq("id", id);
@@ -94,11 +137,11 @@ export default function StudentManagement() {
         {user?.role === "faculty" && (
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2"><UserPlus className="h-4 w-4" />Add Student</Button>
+              <Button className="gap-2"><UserPlus className="h-4 w-4" />{editingStudent ? "Edit Student" : "Add Student"}</Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogHeader><DialogTitle className="font-heading">Add New Student</DialogTitle></DialogHeader>
-              <form className="space-y-4" onSubmit={handleAdd}>
+              <DialogHeader><DialogTitle className="font-heading">{editingStudent ? "Edit Student" : "Add New Student"}</DialogTitle></DialogHeader>
+              <form className="space-y-4" onSubmit={editingStudent ? handleUpdate : handleAdd}>
                 <div className="space-y-2"><Label>Full Name</Label><Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required /></div>
                 <div className="space-y-2"><Label>Register Number</Label><Input value={form.reg_no} onChange={e => setForm(p => ({ ...p, reg_no: e.target.value }))} placeholder="e.g., CS2024001" required /></div>
                 <div className="space-y-2"><Label>Class</Label><Input value={form.class} onChange={e => setForm(p => ({ ...p, class: e.target.value }))} placeholder="e.g., CSE-A" required /></div>
@@ -111,7 +154,7 @@ export default function StudentManagement() {
                   </div>
                 </div>
                 <Button type="submit" className="w-full" disabled={saving}>
-                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Add Student
+                  {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{editingStudent ? "Update Student" : "Add Student"}
                 </Button>
               </form>
             </DialogContent>
@@ -149,9 +192,14 @@ export default function StudentManagement() {
                   <div className="flex items-center gap-1">
                     {s.photo_url && <span className="text-xs text-accent font-medium">Photo ✓</span>}
                     {user?.role === "faculty" && s.faculty_id === user.id && (
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(s.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(s)}>
+                          <UserPlus className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(s.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>

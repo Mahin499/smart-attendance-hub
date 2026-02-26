@@ -8,6 +8,7 @@ import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import RoleSetup from "./pages/RoleSetup";
+import PrincipalRegister from "./pages/PrincipalRegister";
 import Dashboard from "./pages/Dashboard";
 import FacultyManagement from "./pages/FacultyManagement";
 import StudentManagement from "./pages/StudentManagement";
@@ -17,6 +18,7 @@ import PeriodConfig from "./pages/PeriodConfig";
 import Reports from "./pages/Reports";
 import Setup from "./pages/Setup";
 import Health from "./pages/Health";
+import Profile from "./pages/Profile";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
@@ -41,6 +43,7 @@ function AppRoutes() {
       <Route path="/" element={isAuthenticated ? (user?.role ? <Navigate to="/dashboard" replace /> : <Navigate to="/setup" replace />) : <Login />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/setup" element={isAuthenticated ? (user?.role ? <Navigate to="/dashboard" replace /> : <RoleSetup />) : <Navigate to="/" replace />} />
+      <Route path="/register-principal" element={<PrincipalRegister />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/dashboard/faculty" element={<ProtectedRoute><FacultyManagement /></ProtectedRoute>} />
       <Route path="/dashboard/students" element={<ProtectedRoute><StudentManagement /></ProtectedRoute>} />
@@ -48,6 +51,7 @@ function AppRoutes() {
       <Route path="/dashboard/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
       <Route path="/dashboard/periods" element={<ProtectedRoute><PeriodConfig /></ProtectedRoute>} />
       <Route path="/dashboard/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+      <Route path="/dashboard/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
       <Route path="/health" element={<Health />} />
       <Route path="*" element={<NotFound />} />
     </Routes>

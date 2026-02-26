@@ -55,7 +55,7 @@ const Login = () => {
       return;
     }
 
-    const result = await signup(email, password, name);
+    const result = await signup(email, password, name, { reg_code: regCode });
     setLoading(false);
     if (result.success) {
       setSuccess("Account created! Check your email to verify, then sign in.");
@@ -137,6 +137,12 @@ const Login = () => {
                 {t === "login" ? "Sign In" : t === "register" ? "Register" : "Reset"}
               </button>
             ))}
+            <button
+              onClick={() => navigate("/register-principal")}
+              className="flex-1 py-2.5 text-sm font-medium rounded-md transition-all text-muted-foreground hover:text-foreground"
+            >
+              Principal
+            </button>
           </div>
 
           {success && <p className="text-sm text-success mb-4 text-center bg-success/10 p-3 rounded-lg">{success}</p>}

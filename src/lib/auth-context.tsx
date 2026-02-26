@@ -9,13 +9,20 @@ export interface User {
   email: string;
   role: UserRole;
   name: string;
+  schoolName?: string | null;
+  photoUrl?: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  signup: (
+    email: string,
+    password: string,
+    name: string,
+    metadata?: Record<string, any>
+  ) => Promise<{ success: boolean; error?: string }>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -35,7 +42,7 @@ async function fetchUserRole(userId: string): Promise<UserRole> {
 async function fetchProfile(userId: string) {
   const { data } = await supabase
     .from("profiles")
-    .select("name, email")
+    .select("name, email, school_name, photo_url")
     .eq("id", userId)
     .maybeSingle();
   return data;
@@ -51,6 +58,8 @@ async function buildUser(supabaseUser: SupabaseUser): Promise<User> {
     email: supabaseUser.email ?? "",
     role,
     name: profile?.name || supabaseUser.user_metadata?.full_name || supabaseUser.email || "",
+    schoolName: profile?.school_name || null,
+    photoUrl: profile?.photo_url || null,
   };
 }
 
@@ -86,15 +95,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   }, []);
 
-  const signup = useCallback(async (email: string, password: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name }, emailRedirectTo: window.location.origin },
-    });
-    if (error) return { success: false, error: error.message };
-    return { success: true };
-  }, []);
+  const signup = useCallback(
+    async (
+      email: string,
+      password: string,
+      name: string,
+      metadata: Record<string, any> = {}
+    ) => {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name, ...metadata },
+          emailRedirectTo: window.location.origin,
+        },
+      });
+      if (error) return { success: false, error: error.message };
+      return { success: true };
+    },
+    []
+  );
 
   const signInWithGoogle = useCallback(async () => {
     const { error } = await supabase.auth.signInWithOAuth({

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,11 @@ export default function RoleSetup() {
   const [error, setError] = useState("");
   const [hasPrincipal, setHasPrincipal] = useState<boolean | null>(null);
 
+  // principal info for setup
+  const [schoolName, setSchoolName] = useState("");
+  const [profileFile, setProfileFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (user?.role) navigate("/dashboard");
   }, [user?.role, navigate]);
@@ -28,6 +33,13 @@ export default function RoleSetup() {
       .eq("role", "principal")
       .limit(1)
       .then(({ data }) => setHasPrincipal((data?.length ?? 0) > 0));
+
+    // if user metadata contains a registration code, populate it
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.user_metadata?.reg_code) {
+        setRegCode(data.user.user_metadata.reg_code as string);
+      }
+    });
   }, []);
 
   const setupPrincipal = async () => {
@@ -41,13 +53,30 @@ export default function RoleSetup() {
       setLoading(false);
       return;
     }
-    const { error } = await supabase.from("user_roles").insert({ user_id: user.id, role: "principal" });
-    setLoading(false);
-    if (error) {
-      setError(error.message);
-    } else {
-      window.location.reload();
+    const { error: roleErr } = await supabase.from("user_roles").insert({ user_id: user.id, role: "principal" });
+    if (roleErr) {
+      setError(roleErr.message);
+      setLoading(false);
+      return;
     }
+
+    // update profile with school name and optional photo
+    const updates: any = {};
+    if (schoolName) updates.school_name = schoolName;
+    if (profileFile) {
+      const path = `${user.id}/${Date.now()}-${profileFile.name}`;
+      const { error: uploadErr } = await supabase.storage.from("profile-photos").upload(path, profileFile);
+      if (!uploadErr) {
+        const { data: urlData } = supabase.storage.from("profile-photos").getPublicUrl(path);
+        updates.photo_url = urlData.publicUrl;
+      }
+    }
+    if (Object.keys(updates).length > 0) {
+      await supabase.from("profiles").update(updates).eq("id", user.id);
+    }
+
+    setLoading(false);
+    window.location.reload();
   };
 
   const setupFaculty = async () => {
@@ -56,7 +85,7 @@ export default function RoleSetup() {
     setError("");
     const { data: codeData } = await supabase
       .from("registration_codes")
-      .select("id")
+      .select("id, created_by")
       .eq("code", regCode)
       .eq("is_active", true)
       .maybeSingle();
@@ -65,19 +94,29 @@ export default function RoleSetup() {
       setLoading(false);
       return;
     }
-    // Use edge function or direct insert - principal must have inserted the role
-    // For faculty self-registration, we need a workaround since RLS only allows principal to insert
-    // We'll use a database function
+    // register the faculty role via RPC
     const { error } = await supabase.rpc("register_faculty_with_code", {
       _user_id: user.id,
       _code: regCode,
     });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       setError(error.message);
-    } else {
-      window.location.reload();
+      return;
     }
+
+    // fetch the principal's school name and propagate it into our profile
+    const { data: principalProfile } = await supabase
+      .from("profiles")
+      .select("school_name")
+      .eq("id", codeData.created_by)
+      .maybeSingle();
+    if (principalProfile?.school_name) {
+      await supabase.from("profiles").update({ school_name: principalProfile.school_name }).eq("id", user.id);
+    }
+
+    setLoading(false);
+    window.location.reload();
   };
 
   return (
@@ -130,6 +169,18 @@ export default function RoleSetup() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">Logged in as: <strong>{user?.email}</strong></p>
+              <div className="space-y-2">
+                <Label>Institution Name</Label>
+                <Input value={schoolName} onChange={e => setSchoolName(e.target.value)} placeholder="College or School" />
+              </div>
+              <div className="space-y-2">
+                <Label>Profile Photo (optional)</Label>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={e => setProfileFile(e.target.files?.[0] || null)} />
+                <div onClick={() => fileRef.current?.click()} className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors cursor-pointer">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">{profileFile ? profileFile.name : "Click to upload a photo"}</p>
+                </div>
+              </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setMode("choose")}>Back</Button>

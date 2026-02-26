@@ -98,7 +98,21 @@ python face_recognition_attendance.py
 ```
 
 ## 📁 Project Structure
+### New pages and features
 
+- **Principal registration**: a dedicated sign-up page (`/register-principal`) lets the first principal create an account and specify the institution name. This value is stored in the profile and propagated automatically to faculty accounts created under that principal.
+- **Role setup**: after logging in without a role, users are guided through a setup wizard that handles first principal creation or faculty registration with a code. The wizard now auto-fills registration codes entered during sign‑up and copies the college/school name from the issuing principal.
+- **Profile editing**: principals and faculty each have a profile page (`/dashboard/profile`) where they can edit their name, institution name, and upload a profile photo. Student records can now also be edited (and deleted) from the student management dashboard.
+
+### Database migration
+
+A new migration adds `school_name` and `photo_url` columns to the `profiles` table and updates the signup trigger so metadata is preserved. After pulling the repo you should apply all migrations to your Supabase project (via `supabase db push` or by running the SQL in the dashboard).
+
+### Storage bucket
+
+Student photos continue to use the `student-photos` bucket. Profile pictures live in a new bucket named `profile-photos` (public). Create this bucket in your Supabase project's Storage dashboard.
+
+## 📋 Project Structure
 ```
 smart-attendance-hub/
 ├── src/
