@@ -43,7 +43,7 @@ def findEncodings(images):
 
 
 encodeListKnown = findEncodings(images)
-print("Encoding Complete ✅")
+print("Encoding Complete ")
 
 
 # ===============================
@@ -75,7 +75,7 @@ def markAttendance(name):
         writer = csv.writer(f)
         writer.writerow([name, dateString, timeString, attendance_count[name]])
 
-    print(f"✅ POSITIVE: {name} Attendance Marked | Count: {attendance_count[name]}")
+    print(f" POSITIVE: {name} Attendance Marked | Count: {attendance_count[name]}")
 
 
 # ===============================
@@ -84,7 +84,7 @@ def markAttendance(name):
 
 cap = cv2.VideoCapture(0)
 
-print("System Started 🎥")
+print("System Started ")
 
 while True:
     success, img = cap.read()
@@ -95,7 +95,7 @@ while True:
     encodesCurFrame = face_recognition.face_encodings(imgSmall, facesCurFrame)
 
     if len(facesCurFrame) == 0:
-        print("❌ NEGATIVE: No Face Detected")
+        print(" NEGATIVE: No Face Detected")
 
     for encodeFace, faceLoc in zip(encodesCurFrame, facesCurFrame):
         matches = face_recognition.compare_faces(encodeListKnown, encodeFace)
@@ -116,7 +116,7 @@ while True:
             markAttendance(name)
 
         else:
-            print("❌ NEGATIVE: Face Not Recognized")
+            print(" NEGATIVE: Face Not Recognized")
 
     cv2.imshow('Webcam', img)
 

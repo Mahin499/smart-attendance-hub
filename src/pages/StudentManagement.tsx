@@ -73,48 +73,48 @@ export default function StudentManagement() {
       fetchStudents();
     }
   };
-+  
-+  const handleEdit = (s: Student) => {
-+    setEditingStudent(s);
-+    setForm({ name: s.name, reg_no: s.reg_no, class: s.class });
-+    setPhotoFile(null);
-+    setOpen(true);
-+  };
-+
-+  const handleUpdate = async (e: React.FormEvent) => {
-+    e.preventDefault();
-+    if (!user || !editingStudent) return;
-+    setSaving(true);
-+
-+    let photo_url = editingStudent.photo_url;
-+    if (photoFile) {
-+      const path = `${user.id}/${Date.now()}-${photoFile.name}`;
-+      const { error: uploadErr } = await supabase.storage.from("student-photos").upload(path, photoFile);
-+      if (!uploadErr) {
-+        const { data: urlData } = supabase.storage.from("student-photos").getPublicUrl(path);
-+        photo_url = urlData.publicUrl;
-+      }
-+    }
-+
-+    const { error } = await supabase.from("students").update({
-+      name: form.name,
-+      reg_no: form.reg_no,
-+      class: form.class,
-+      photo_url,
-+    }).eq("id", editingStudent.id);
-+
-+    setSaving(false);
-+    if (error) {
-+      toast({ title: "Error", description: error.message, variant: "destructive" });
-+    } else {
-+      toast({ title: "Student updated" });
-+      setForm({ name: "", reg_no: "", class: "" });
-+      setPhotoFile(null);
-+      setOpen(false);
-+      setEditingStudent(null);
-+      fetchStudents();
-+    }
-+  };
+  
+  const handleEdit = (s: Student) => {
+    setEditingStudent(s);
+    setForm({ name: s.name, reg_no: s.reg_no, class: s.class });
+    setPhotoFile(null);
+    setOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !editingStudent) return;
+    setSaving(true);
+
+    let photo_url = editingStudent.photo_url;
+    if (photoFile) {
+      const path = `${user.id}/${Date.now()}-${photoFile.name}`;
+      const { error: uploadErr } = await supabase.storage.from("student-photos").upload(path, photoFile);
+      if (!uploadErr) {
+        const { data: urlData } = supabase.storage.from("student-photos").getPublicUrl(path);
+        photo_url = urlData.publicUrl;
+      }
+    }
+
+    const { error } = await supabase.from("students").update({
+      name: form.name,
+      reg_no: form.reg_no,
+      class: form.class,
+      photo_url,
+    }).eq("id", editingStudent.id);
+
+    setSaving(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Student updated" });
+      setForm({ name: "", reg_no: "", class: "" });
+      setPhotoFile(null);
+      setOpen(false);
+      setEditingStudent(null);
+      fetchStudents();
+    }
+  };
 
   const handleDelete = async (id: string) => {
     await supabase.from("students").delete().eq("id", id);
