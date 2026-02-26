@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Eye, EyeOff, GraduationCap, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import loginHero from "@/assets/login-hero.jpg";
+import campusImage from "@/assets/campus.jpg";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -96,7 +96,7 @@ const Login = () => {
     <div className="flex min-h-screen">
       {/* Left panel - Hero */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-hero relative overflow-hidden items-center justify-center">
-        <img src={loginHero} alt="Smart Attendance" className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay" />
+        <img src={campusImage} alt="Campus" className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-overlay" />
         <div className="relative z-10 text-center px-12 animate-fade-in">
           <div className="inline-flex items-center gap-3 mb-6 bg-primary-foreground/10 backdrop-blur-sm px-6 py-3 rounded-full">
             <GraduationCap className="h-8 w-8 text-accent" />
@@ -112,8 +112,14 @@ const Login = () => {
       </div>
 
       {/* Right panel - Form */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-background">
-        <div className="w-full max-w-md animate-fade-in">
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-background relative">
+        {/* background image for smaller viewports (large already has the left hero) */}
+        <img
+          src={campusImage}
+          alt="Campus"
+          className="absolute inset-0 w-full h-full object-cover opacity-10 lg:hidden"
+        />
++        <div className="w-full max-w-md animate-fade-in relative">
           <div className="lg:hidden flex items-center gap-2 mb-8 justify-center">
             <GraduationCap className="h-8 w-8 text-accent" />
             <span className="text-2xl font-heading font-bold text-foreground">Smart Attendance</span>

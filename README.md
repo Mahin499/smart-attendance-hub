@@ -74,6 +74,10 @@ npm run dev
 # Access at http://localhost:8080
 ```
 
+> **Tip:** The login/signup pages use an image located at `src/assets/campus.jpg`.
+> Replace that file with the building or campus photo you attached (keep the same
+> filename) to customize the hero image seen on those screens.
+
 ### 3. ML Module Setup
 
 ```bash
