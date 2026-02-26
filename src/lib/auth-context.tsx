@@ -22,7 +22,7 @@ interface AuthContextType {
     password: string,
     name: string,
     metadata?: Record<string, any>
-  ) => Promise<{ success: boolean; error?: string }>;
+  ) => Promise<{ success: boolean; error?: string; user?: SupabaseUser | null }>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: string,
       metadata: Record<string, any> = {}
     ) => {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -111,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
       });
       if (error) return { success: false, error: error.message };
-      return { success: true };
+      return { success: true, user: data.user || null };
     },
     []
   );

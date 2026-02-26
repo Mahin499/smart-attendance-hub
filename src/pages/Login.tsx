@@ -56,6 +56,18 @@ const Login = () => {
     }
 
     const result = await signup(email, password, name, { reg_code: regCode });
+    // attempt to assign faculty role immediately if we received a user id
+    if (result.success && result.user && regCode) {
+      try {
+        await supabase.rpc("register_faculty_with_code", {
+          _user_id: result.user.id,
+          _code: regCode,
+        });
+      } catch (err) {
+        // ignore, will try again when they log in through RoleSetup
+        console.warn("early role assignment failed", err);
+      }
+    }
     setLoading(false);
     if (result.success) {
       setSuccess("Account created! Check your email to verify, then sign in.");
