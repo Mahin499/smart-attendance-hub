@@ -16,6 +16,7 @@ import Analytics from "./pages/Analytics";
 import PeriodConfig from "./pages/PeriodConfig";
 import Reports from "./pages/Reports";
 import Setup from "./pages/Setup";
+import Health from "./pages/Health";
 import DashboardLayout from "./components/DashboardLayout";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
@@ -47,6 +48,7 @@ function AppRoutes() {
       <Route path="/dashboard/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
       <Route path="/dashboard/periods" element={<ProtectedRoute><PeriodConfig /></ProtectedRoute>} />
       <Route path="/dashboard/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+      <Route path="/health" element={<Health />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
