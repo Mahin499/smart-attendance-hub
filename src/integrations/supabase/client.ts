@@ -2,19 +2,23 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// Prefer Vite env, but allow runtime globals (useful on some hosting providers)
+const _viteUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const _viteKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
-// Validate required env vars early and surface a helpful error for debugging
+const _globalUrl = (globalThis as any).__SUPABASE_URL || (globalThis as any).supabaseUrl || (globalThis as any).SUPABASE_URL;
+const _globalKey = (globalThis as any).__SUPABASE_KEY || (globalThis as any).supabaseKey || (globalThis as any).SUPABASE_PUBLISHABLE_KEY;
+
+const SUPABASE_URL = _viteUrl || _globalUrl;
+const SUPABASE_PUBLISHABLE_KEY = _viteKey || _globalKey;
+
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  // Provide a clear message that will show in the browser console/runtime
   const missing = [] as string[];
-  if (!SUPABASE_URL) missing.push('VITE_SUPABASE_URL');
-  if (!SUPABASE_PUBLISHABLE_KEY) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY');
-  const msg = `Missing required environment variable(s): ${missing.join(', ')}.\n` +
-    `Set these in your local .env (or in your hosting provider's environment variables).\n` +
+  if (!SUPABASE_URL) missing.push('VITE_SUPABASE_URL or runtime __SUPABASE_URL');
+  if (!SUPABASE_PUBLISHABLE_KEY) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY or runtime __SUPABASE_KEY');
+  const msg = `Missing required Supabase configuration: ${missing.join(', ')}.\n` +
+    `Set these in your local .env (Vite) or expose them as runtime globals (e.g. window.__SUPABASE_URL) in your hosting environment.\n` +
     `See README.md -> Environment Configuration for details.`;
-  // Log and throw so ErrorBoundary or our global handler displays it
   // eslint-disable-next-line no-console
   console.error(msg);
   throw new Error(msg);
