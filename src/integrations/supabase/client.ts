@@ -5,6 +5,21 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Validate required env vars early and surface a helpful error for debugging
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  // Provide a clear message that will show in the browser console/runtime
+  const missing = [] as string[];
+  if (!SUPABASE_URL) missing.push('VITE_SUPABASE_URL');
+  if (!SUPABASE_PUBLISHABLE_KEY) missing.push('VITE_SUPABASE_PUBLISHABLE_KEY');
+  const msg = `Missing required environment variable(s): ${missing.join(', ')}.\n` +
+    `Set these in your local .env (or in your hosting provider's environment variables).\n` +
+    `See README.md -> Environment Configuration for details.`;
+  // Log and throw so ErrorBoundary or our global handler displays it
+  // eslint-disable-next-line no-console
+  console.error(msg);
+  throw new Error(msg);
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
