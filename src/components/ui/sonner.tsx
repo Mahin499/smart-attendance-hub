@@ -1,14 +1,15 @@
 import { useTheme } from "next-themes";
-import { Toaster as Sonner, toast } from "sonner";
+import { Toaster as BaseToaster, toast } from "sonner";
 
-type ToasterProps = React.ComponentProps<typeof Sonner>;
+// expose a properly named wrapper so App can render <Sonner />
+type SonnerProps = React.ComponentProps<typeof BaseToaster>;
 
-const Toaster = ({ ...props }: ToasterProps) => {
+const Sonner = ({ ...props }: SonnerProps) => {
   const { theme = "system" } = useTheme();
 
   return (
-    <Sonner
-      theme={theme as ToasterProps["theme"]}
+    <BaseToaster
+      theme={theme as SonnerProps["theme"]}
       className="toaster group"
       toastOptions={{
         classNames: {
@@ -24,4 +25,4 @@ const Toaster = ({ ...props }: ToasterProps) => {
   );
 };
 
-export { Toaster, toast };
+export { Sonner, toast };

@@ -175,6 +175,13 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your_publishable_key
 # Configure in Supabase Dashboard > Authentication > Providers > Google
 ```
 
+> **Deployment tip:**
+> If the application is deployed without these environment variables, a small script in
+> `index.html` will populate them from `window.__SUPABASE_URL` and
+> `window.__SUPABASE_KEY` so the demo still runs. This is only a temporary convenience;
+> you should set the variables in your hosting provider (e.g. Vercel) and remove the
+> inline script once the site is working.
+
 For ML module, ensure you have Python virtual environment activated.
 
 ## 🔐 Security Features
